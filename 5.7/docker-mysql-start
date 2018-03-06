@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+## Запускает сервер баз данных.
+##
+
+set -eo pipefail
+
+# Задаём UID веб-сервера и меняем владельца файлов сайта.
+if [ "${FILE_OWNER_UID}" != "" ]; then
+    usermod --uid ${FILE_OWNER_UID} mysql
+    chown mysql /var/lib/mysql
+fi
+
+exec docker-entrypoint.sh "$@"
