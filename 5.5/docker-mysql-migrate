@@ -12,7 +12,7 @@ fi
 
 tableName=${MYSQL_MIGRATIONS_TABLE:=migrations}
 migrationsDir=${MYSQL_MIGRATIONS_DIR:=/usr/local/mysql/migrations}
-mysql="mysql --user=root --database=${MYSQL_DATABASE}"
+mysql="mysql --user=root --password=${MYSQL_ROOT_PASSWORD=''} --database=${MYSQL_DATABASE}"
 
 ## Ждёт доступности сервера.
 echo 'Waiting for MySQL server...'
