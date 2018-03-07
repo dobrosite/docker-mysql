@@ -34,7 +34,8 @@ for filename in $(find ${migrationsDir} -name '*.sql' | sort); do
             echo "${name} — applying..."
             ${mysql} -e "INSERT INTO ${tableName} (migration) VALUES ('${name}')"
         else
-            exit 1
+            echo "[ERROR] Migration ${name} failed!" >&2
+            exit 129
         fi
     fi
 done
