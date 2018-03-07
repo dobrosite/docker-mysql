@@ -3,12 +3,17 @@
 ## Запускает сервер баз данных.
 ##
 
-set -eo pipefail
+set -e
+
+echo "My Entrypoint"
 
 # Задаём UID сервера и меняем владельца файлов БД.
-if [ "${FILE_OWNER_UID}" != "" ]; then
+if [[ "${FILE_OWNER_UID}" != "" && "$(id -u mysql)" != "${FILE_OWNER_UID}" ]]; then
+    echo "Change UID"
     usermod --uid ${FILE_OWNER_UID} mysql
     chown mysql /var/lib/mysql
 fi
+
+echo "[$*]"
 
 exec docker-entrypoint.sh "$@"

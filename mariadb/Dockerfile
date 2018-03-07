@@ -8,3 +8,4 @@ FROM mariadb:latest
 COPY docker-mysql-start /usr/local/bin/
 
 ENTRYPOINT ["docker-mysql-start"]
+CMD ["mysqld"]
