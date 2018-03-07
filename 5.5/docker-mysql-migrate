@@ -5,7 +5,7 @@
 
 set -e
 
-if [ "${MYSQL_DATABASE}" == "" ]; then
+if [ ${MYSQL_DATABASE=''} == '' ]; then
     echo 'Environment variable MYSQL_DATABASE not set. Exiting.'
     exit 0
 fi
@@ -14,6 +14,7 @@ tableName=${MYSQL_MIGRATIONS_TABLE:=migrations}
 migrationsDir=${MYSQL_MIGRATIONS_DIR:=/usr/local/mysql/migrations}
 
 # Ждёт доступности сервера.
+echo 'Waiting for MySQL server...'
 while ! mysql --execute='' 2>/dev/null; do echo -n '.'; sleep 1; done;
 echo ''
 
@@ -21,6 +22,7 @@ mysql="mysql ${MYSQL_DATABASE}"
 
 # Создаёт таблицу миграций, если её ещё нет.
 if ! ${mysql} -e 'SHOW TABLES' | grep ${tableName} > /dev/null; then
+    echo 'Creating migration log.'
     ${mysql} -e "CREATE TABLE ${tableName} (migration VARCHAR(255) CHARACTER SET utf8 NOT NULL, PRIMARY KEY (migration))"
 fi
 
@@ -37,3 +39,5 @@ for filename in $(find ${migrationsDir} -name *.sql); do
         fi
     fi
 done
+
+echo 'Migrations are done.'
