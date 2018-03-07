@@ -12,14 +12,24 @@ else
     if [ ${FILE_OWNER_UID} != $(id -u mysql) ]; then
         echo "Changing mysql UID to ${FILE_OWNER_UID}."
         usermod --uid ${FILE_OWNER_UID} mysql
-        echo 'Resetting owner of /var/lib/mysql'
-        chown mysql /var/lib/mysql
+
+        if [ -d /var/lib/mysql ]; then
+            echo 'Resetting owner of /var/lib/mysql'
+            chown -R mysql /var/lib/mysql
+        fi
     fi
 fi
 
-if [[ "${MYSQL_ROOT_PASSWORD=''}" != '' && "${MYSQL_DATABASE=''}" != '' ]]; then
-    echo 'Starting background migration process.'
-    docker-mysql-migrate &
+if [ "${MYSQL_ROOT_PASSWORD=''}" != '' -a "${MYSQL_DATABASE=''}" != '' ]; then
+    if [ -d "/var/lib/mysql/${MYSQL_DATABASE}" ]; then
+        # Сервер уже настроен.
+        echo 'Starting background migration process.'
+        docker-mysql-migrate &
+    else
+        # Сервер ещё не настроен.
+        echo 'Adding init script.'
+        ln -s "$(which docker-mysql-migrate)" /docker-entrypoint-initdb.d/docker-mysql-migrate.sh
+    fi
 fi
 
 exec docker-entrypoint.sh "$@"
