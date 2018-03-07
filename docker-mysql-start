@@ -6,12 +6,19 @@
 set -e
 
 # Задаём UID сервера и меняем владельца файлов БД.
-if [[ "${FILE_OWNER_UID}" != "" && "$(id -u mysql)" != "${FILE_OWNER_UID}" ]]; then
-    usermod --uid ${FILE_OWNER_UID} mysql
-    chown mysql /var/lib/mysql
+if [ ${FILE_OWNER_UID=''} == '' ]; then
+    echo 'FILE_OWNER_UID variable not set. Skipping mysql UID change.'
+else
+    if [ ${FILE_OWNER_UID} != $(id -u mysql) ]; then
+        echo "Changing mysql UID to ${FILE_OWNER_UID}."
+        usermod --uid ${FILE_OWNER_UID} mysql
+        echo 'Resetting owner of /var/lib/mysql'
+        chown mysql /var/lib/mysql
+    fi
 fi
 
-if [[ "${MYSQL_ROOT_PASSWORD}" != "" && "${MYSQL_DATABASE}" != "" ]]; then
+if [[ "${MYSQL_ROOT_PASSWORD=''}" != '' && "${MYSQL_DATABASE=''}" != '' ]]; then
+    echo 'Starting background migration process.'
     docker-mysql-migrate &
 fi
 
