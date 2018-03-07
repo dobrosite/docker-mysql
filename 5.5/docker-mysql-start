@@ -5,15 +5,14 @@
 
 set -e
 
-echo "My Entrypoint"
-
 # Задаём UID сервера и меняем владельца файлов БД.
 if [[ "${FILE_OWNER_UID}" != "" && "$(id -u mysql)" != "${FILE_OWNER_UID}" ]]; then
-    echo "Change UID"
     usermod --uid ${FILE_OWNER_UID} mysql
     chown mysql /var/lib/mysql
 fi
 
-echo "[$*]"
+if [[ "${MYSQL_ROOT_PASSWORD}" != "" && "${MYSQL_DATABASE}" != "" ]]; then
+    docker-mysql-migrate &
+fi
 
 exec docker-entrypoint.sh "$@"

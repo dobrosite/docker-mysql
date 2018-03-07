@@ -28,6 +28,13 @@ services:
         image: dobrosite/mysql:5.7
         environment:
             FILE_OWNER_UID: 1000
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: database
+            MYSQL_USER: user
+            MYSQL_PASSWORD: password
+        volumes:
+            - ./docker/var/mysql:/var/lib/mysql
+            - ./db/migrations:/var/local/mysql/migrations
 ```
 
 ### Переменные окружения
@@ -35,4 +42,18 @@ services:
 Некоторые настройки можно произвести через переменные окружения.
 
 - `FILE_OWNER_UID` — UID для пользователя `mysql`, от которого работает сервер баз данных.
+- `MYSQL_MIGRATIONS_TABLE` — имя таблицы для записи применённых [миграций](#миграции) (по умолчанию `migrations`).
+- `MYSQL_MIGRATIONS_DIR` — путь к папке внутри контейнера, содержащей файлы [миграций](#миграции) (по умолчанию
+  `/usr/local/mysql/migrations`).
 
+## Миграции
+
+Образы содержат простой автоматический механизм применения миграций.
+
+При каждом запуске, если установлены переменные окружения
+[MYSQL_ROOT_PASSWORD](https://github.com/docker-library/docs/tree/master/mysql#mysql_root_password) и
+[MYSQL_DATABASE](https://github.com/docker-library/docs/tree/master/mysql#mysql_database) вызывается сценарий
+`docker-mysql-migrate`. Этот сценарий ищет внутри контейнера в папке, заданной переменной
+[MYSQL_MIGRATIONS_DIR](#Переменные-окружения) файлы *.sql и применяет их к базе, заданной переменной `MYSQL_DATABASE`.
+Применённые миграции записываются в таблицу, заданную переменной `MYSQL_MIGRATIONS_TABLE`, чтобы исключить их
+повторное применение.

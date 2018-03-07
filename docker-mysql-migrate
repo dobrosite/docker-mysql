@@ -1,0 +1,39 @@
+#!/bin/bash
+##
+## Применяет миграции к базе данных.
+##
+
+set -e
+
+if [ "${MYSQL_DATABASE}" == "" ]; then
+    echo 'Environment variable MYSQL_DATABASE not set. Exiting.'
+    exit 0
+fi
+
+tableName=${MYSQL_MIGRATIONS_TABLE:=migrations}
+migrationsDir=${MYSQL_MIGRATIONS_DIR:=/usr/local/mysql/migrations}
+
+# Ждёт доступности сервера.
+while ! mysql --execute='' 2>/dev/null; do echo -n '.'; sleep 1; done;
+echo ''
+
+mysql="mysql ${MYSQL_DATABASE}"
+
+# Создаёт таблицу миграций, если её ещё нет.
+if ! ${mysql} -e 'SHOW TABLES' | grep ${tableName} > /dev/null; then
+    ${mysql} -e "CREATE TABLE ${tableName} (migration VARCHAR(255) CHARACTER SET utf8 NOT NULL, PRIMARY KEY (migration))"
+fi
+
+for filename in $(find ${migrationsDir} -name *.sql); do
+    name=$(basename -s .sql ${filename})
+    if ${mysql} -e "SELECT * FROM ${tableName} WHERE migration='${name}'" | grep "${name}" >/dev/null; then
+       echo "${name} — already applied"
+    else
+        if ${mysql} --verbose < ${filename}; then
+            echo "${name} — applying..."
+            ${mysql} -e "INSERT INTO ${tableName} (migration) VALUES ('${name}')"
+        else
+            exit 1
+        fi
+    fi
+done

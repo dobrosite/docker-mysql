@@ -5,7 +5,7 @@
 
 FROM mysql:8.0
 
-COPY docker-mysql-start /usr/local/bin/
+COPY docker-mysql-* /usr/local/bin/
 
 ENTRYPOINT ["docker-mysql-start"]
 CMD ["mysqld"]
