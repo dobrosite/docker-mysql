@@ -12,12 +12,12 @@ fi
 
 tableName=${MYSQL_MIGRATIONS_TABLE:=migrations}
 migrationsDir=${MYSQL_MIGRATIONS_DIR:=/usr/local/mysql/migrations}
-mysql="mysql ${MYSQL_DATABASE}"
+mysql="mysql --user=root --database=${MYSQL_DATABASE}"
 
 ## Ждёт доступности сервера.
 echo 'Waiting for MySQL server...'
 # Ждём возможности подключиться.
-while ! mysql --execute='' 2>/dev/null; do sleep 1; done
+while ! ${mysql} --execute='' 2>/dev/null; do sleep 1; done
 
 # Создаёт таблицу миграций, если её ещё нет.
 if ! ${mysql} -e 'SHOW TABLES' | grep ${tableName} > /dev/null; then
