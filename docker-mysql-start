@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 ##
 ## Запускает сервер баз данных.
 ##
@@ -6,10 +6,10 @@
 set -e
 
 # Задаём UID сервера и меняем владельца файлов БД.
-if [ ${FILE_OWNER_UID=''} == '' ]; then
+if [ "${FILE_OWNER_UID=}" = '' ]; then
     echo 'FILE_OWNER_UID variable not set. Skipping mysql UID change.'
 else
-    if [ ${FILE_OWNER_UID} != $(id -u mysql) ]; then
+    if [ "${FILE_OWNER_UID}" != $(id -u mysql) ]; then
         echo "Changing mysql UID to ${FILE_OWNER_UID}."
         usermod --uid ${FILE_OWNER_UID} mysql
 
@@ -27,9 +27,14 @@ if [ "${MYSQL_ROOT_PASSWORD=''}" != '' -a "${MYSQL_DATABASE=''}" != '' ]; then
         docker-mysql-migrate &
     else
         # Сервер ещё не настроен.
-        echo 'Adding init script.'
-        ln -s "$(which docker-mysql-migrate)" /docker-entrypoint-initdb.d/docker-mysql-migrate.sh
+        if [ -f /docker-entrypoint-initdb.d/docker-mysql-migrate.sh ]; then
+            echo 'Migrations init script already exists. Skipping.'
+        else
+            echo 'Adding migrations init script.'
+            ln -s "$(which docker-mysql-migrate)" /docker-entrypoint-initdb.d/docker-mysql-migrate.sh
+        fi
     fi
 fi
 
+echo "Starting $@"
 exec docker-entrypoint.sh "$@"
